@@ -1,4 +1,4 @@
-CommonLisp
+MusiLisp
 ==========
 
-My first Lisp-Repository
+A program to create .wav music files from tone-lists.
