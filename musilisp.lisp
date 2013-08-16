@@ -1,5 +1,8 @@
 ;;; ToDo:
-
+;;; -Sinus-Generator
+;;; -Tone Lists (frequency, Seconds etc.)
+;;; -Tonal Variations in Generatorfunction
+;;; -More generic Code (samples per second etc.)
 
 ;;; =========================
 ;;; Wave File Structure
@@ -53,8 +56,11 @@
 
 (defun write-byte-sequence (seq stream)
  (unless (null seq)
-	(write-byte (car seq) stream)
-	(write-byte-sequence (cdr seq) stream))
+	(if (listp (car seq))
+	(write-byte-sequence (car seq) stream)
+	(write-byte (car seq) stream))
+	(write-byte-sequence (cdr seq) stream)
+	)
 )
 
 (defun get-wave-header (filesize)
@@ -77,34 +83,87 @@
 	(numbertoxbyte 16 2)		;;; Bits per Sample = 16
 	)
 )
+
+(defun squarewave (x frequency maxvolume samples_per_second)
+	(declare 
+	(integer frequency)
+	(integer maxvolume)
+	(integer samples_per_second))	
+	(let* ((t2 (/ samples_per_second frequency))
+		  (t1 (/ t2 2))
+		  (t3 (mod x t2)))
+		(if (< t3 t1)
+			maxvolume
+			(+ maxvolume 32768)
+		)
+	)
+)
+
+(defun make-squarewave (frequency maxvolume samples_per_second)
+	#'(lambda (x)
+		(squarewave x frequency maxvolume samples_per_second)
+	)
+)
+
+
+
 (defun make-mysin (frequency)
+(declare (integer frequency))
 (let ((pf2 (* frequency 2 pi)))
     #'(lambda (x) 
-	(nth-value 0 (round (* (sin (* x pf2)) 32767)))
+	(declare (integer x))
+	(let* ((z (sin (* x pf2)))
+		  (y (* (nth-value 0 (round (abs z))) 32767))) 
+			(if (< z 0)
+				(+ y 32768)
+				y
+			)
+		)
 	)
 	)
-) 
+)
+ 
 (defun mysin (x frequency)
 	(nth-value 0 (round (* (sin (* x 440 2 pi)) 32767)))
 )
 
+
+(defun write-tone (frequency seconds)
+	(declare (integer frequency) (float seconds))
+	(let* ((samples_per_second 44100)
+		  (samples (* samples_per_second seconds))
+			(mysquarewave (make-squarewave frequency 32767 samples_per_second)))
+		(loop for i
+		from 0 
+		to samples
+		collect (numbertoxbyte (funcall mysquarewave i) 2))
+	)
+)
+
+(defun write-tone-list (liste)
+	(unless (null liste)
+		(cons (write-tone (car liste) 0.5) (write-tone-list (cdr liste)))
+	)
+)
+
 (defun get-data-chunk ()
-	(let ((xsin (make-mysin 440)))
+	(let ((mysquarewave (make-squarewave 440 32767 44100))
+			(mysinus (make-mysin 440))
+			)
 	(setf start (get-universal-time))
 	(setf listedata (concatenate 'list
 	(strtobyte "data")
 	(list 192 127 161 0)
+	(write-tone-list (list 440 660 880 660 440 660 880 1320))
 	(loop for i
 	from 1 
-	to 10584000
-	;;;collect (* (mysin i 440) 128))
-	;;;collect (numbertoxbyte (random 550) 2))
-	collect (numbertoxbyte (funcall xsin i) 2))
+	to 220500
+	collect (numbertoxbyte (funcall mysquarewave i) 2))
+	)
 	))
 	(setf ende (get-universal-time))
-	listedata)
+	listedata
 )
-
 
 (defun testwrite ()
 	(with-open-file (s "testwave.wav"  :direction :output :element-type 'unsigned-byte)
@@ -112,7 +171,8 @@
 		(concatenate 'list
 		(get-wave-header 0)
 		(get-fmt-chunk)
-		(get-data-chunk)) s)
+		(get-data-chunk)
+		) s)
 	)
 	(- ende start)
 )
