@@ -91,10 +91,44 @@
 	(integer samples_per_second))	
 	(let* ((t2 (/ samples_per_second frequency))
 		  (t1 (/ t2 2))
-		  (t3 (mod x t2)))
+		  (t3 (mod x t2))
+			(value maxvolume))
 		(if (< t3 t1)
-			maxvolume
-			(+ maxvolume 32768)
+			value
+			(* -1 value)
+		)
+	)
+)
+
+(defun signedint-to-number (num)
+	(if (> num 32767)
+		(* (logxor num 65535) -1)
+		num
+	)
+)
+
+
+(defun number-to-signedint (num)
+	(if (< num 0)
+		;;;(+ 32768 (logxor (logand num 32767) 32767))
+		(- 65535 (lognot num))
+		(logand num 32767)
+	)
+)
+
+
+(defun make-harmonic-instrument (frequency maxvolume samples_per_second)
+	(declare (integer maxvolume) (integer frequency))
+	#'(lambda (x)
+		(let (	(base (mysin x frequency maxvolume samples_per_second))
+				(harm1	(mysin x (* 2 pi (* frequency 8)) (*(/ maxvolume 100) 45) samples_per_second))
+				(harm2	(mysin x (* 2 pi (+ (* frequency 10)(/ frequency 2))) (*(/ maxvolume 100) 45) samples_per_second)))
+				;;;(harm1	(signedint-to-number (squarewave x (* frequency 8) (*(/ maxvolume 100) 45) samples_per_second)))
+				;;;(harm2	(signedint-to-number (squarewave x (+ (* frequency 8)(/ frequency 1)) (*(/ maxvolume 100) 20) samples_per_second)))
+				;;;(harm3	(signedint-to-number (squarewave x (+ (* frequency 10)(/ frequency 2)) (*(/ maxvolume 100) 25) samples_per_second)))
+				;;;(harm4	(signedint-to-number (squarewave x (+ (* frequency 14)(/ frequency 1)) (*(/ maxvolume 100) 20) samples_per_second)))
+				;;;(harm5	(signedint-to-number (squarewave x (+ (* frequency 18)(/ frequency 2)) (*(/ maxvolume 100) 25) samples_per_second))))
+				(nth-value 0 (truncate (+ base harm1 harm2) 3))
 		)
 	)
 )
@@ -107,24 +141,24 @@
 
 
 
-(defun make-mysin (frequency)
+(defun mysin (x 2pf maxvolume samples_per_second)
+	(let* (	(x2 (/ (float (mod x samples_per_second)) (float samples_per_second)))
+			(y (nth-value 0 (round (* (sin (* x2 2pf) ) maxvolume)))))
+		y
+	)
+)
+
+
+(defun make-mysin (frequency maxvolume samples_per_second)
 (declare (integer frequency))
 (let ((pf2 (* frequency 2 pi)))
     #'(lambda (x) 
 	(declare (integer x))
-	(let* ((z (sin (* x pf2)))
-		  (y (* (nth-value 0 (round (abs z))) 32767))) 
-			(if (< z 0)
-				(+ y 32768)
-				y
-			)
+		(let ((y (mysin x pf2 maxvolume samples_per_second)))
+			y
 		)
 	)
 	)
-)
- 
-(defun mysin (x frequency)
-	(nth-value 0 (round (* (sin (* x 440 2 pi)) 32767)))
 )
 
 
@@ -132,11 +166,13 @@
 	(declare (integer frequency) (float seconds))
 	(let* ((samples_per_second 44100)
 		  (samples (* samples_per_second seconds))
-			(mysquarewave (make-squarewave frequency 32767 samples_per_second)))
+			;;;(mysquarewave (make-harmonic-instrument frequency 32767 samples_per_second)))
+			;;;(mysquarewave (make-squarewave frequency 32767 samples_per_second)))
+			(mysquarewave (make-mysin frequency 32767 samples_per_second)))
 		(loop for i
 		from 0 
 		to samples
-		collect (numbertoxbyte (funcall mysquarewave i) 2))
+		collect (numbertoxbyte (number-to-signedint (funcall mysquarewave i)) 2))
 	)
 )
 
@@ -147,20 +183,13 @@
 )
 
 (defun get-data-chunk ()
-	(let ((mysquarewave (make-squarewave 440 32767 44100))
-			(mysinus (make-mysin 440))
-			)
 	(setf start (get-universal-time))
 	(setf listedata (concatenate 'list
 	(strtobyte "data")
 	(list 192 127 161 0)
 	(write-tone-list (list 440 660 880 660 440 660 880 1320))
-	(loop for i
-	from 1 
-	to 220500
-	collect (numbertoxbyte (funcall mysquarewave i) 2))
 	)
-	))
+	)
 	(setf ende (get-universal-time))
 	listedata
 )
