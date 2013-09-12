@@ -1,3 +1,9 @@
+(defpackage "TONE"
+  (:use "COMMON-LISP")
+  (:export "GET-FREQUENCY"))
+
+(in-package tone)
+
 ;;; Functions for converting a tone into a frequency. 
 ;;; For example:
 ;;; (get-frequency "a'") => 440
@@ -39,10 +45,17 @@
 )
 
 (defun get-frequency (tone)
+	(assert (stringp tone) (tone))
 	(if (null tone)
 		nil
 		(let ((difference (- (get-tone-value (string-to-list tone)) (get-tone-value (string-to-list "a'")) )))
 			(* 440 (expt 2 (/ difference 12)))
 		)
+	)
+)
+
+(defun test ()
+	(let ((a "a"))
+		(assert (equal (get-frequency a) 440) (a) "Wrong frequency" (get-frequency a))
 	)
 )

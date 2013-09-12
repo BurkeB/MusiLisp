@@ -34,6 +34,8 @@
 ;;; <Block Align> Second Value
 ;;; <Block Align> .....
 
+(require "functions_tone.lisp")
+
 (defun numbertoxbyte (number bytecount)
 	(if (> bytecount 0)
 		(let ((masked (logand number 255)))
@@ -178,20 +180,17 @@
 
 (defun write-tone-list (liste)
 	(unless (null liste)
-		(cons (write-tone (car liste) 0.5) (write-tone-list (cdr liste)))
+		(cons (write-tone (tone:get-frequency (car liste)) 0.5) (write-tone-list (cdr liste)))
 	)
 )
 
-(defun get-data-chunk ()
-	(setf start (get-universal-time))
-	(setf listedata (concatenate 'list
+
+(defun get-data-chunk (datacount)
+	(concatenate 'list
 	(strtobyte "data")
-	(list 192 127 161 0)
-	(write-tone-list (list 440 660 880 660 440 660 880 1320))
+	(numbertoxbyte datacount 4)
+	;;;(write-tone-list (list 440 660 880 660 440 660 880 1320))
 	)
-	)
-	(setf ende (get-universal-time))
-	listedata
 )
 
 (defun testwrite ()
@@ -215,3 +214,17 @@
 		(get-data-chunk)) s)
 	)
 )
+
+(defun write-melody (filename tonelist)
+	(with-open-file (s filename  :direction :output :element-type 'unsigned-byte)
+		(write-byte-sequence 
+		(concatenate 'list
+		(get-wave-header 0)
+		(get-fmt-chunk)
+		(get-data-chunk 10584000)
+		(write-tone-list tonelist)
+		) s)
+	)
+)
+
+;;; (write-melody "../../tmp/testwave8.wav" '("c'" "d'" "e'" "f'" "g'" "g'" "a'" "a'" "a'" "a'" "g'" "a'" "a'" "a'" "a'" "g'"))
