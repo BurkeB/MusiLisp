@@ -1,6 +1,7 @@
 (defpackage "TONE"
   (:use "COMMON-LISP")
-  (:export "GET-FREQUENCY"))
+  (:export #'get-toneseconds 
+		   #'get-frequency))
 
 (in-package tone)
 
@@ -15,6 +16,21 @@
 		(if (= (length string) 1)
 		(cons (subseq string 0 1) nil)
 		(cons (subseq string 0 1) (string-to-list (subseq string 1)))
+		)
+	)
+)
+
+(defun calc-toneseconds (bpm length)
+	(declare (integer bpm) (integer length))
+	(float (* (* (/ 60 bpm) 4) (expt length -1)))
+)
+
+(defun extract-numbers-from-list (list)
+	(if (null list)
+		nil
+		(if (numberp (parse-integer (car list) :junk-allowed t))
+			(cons (car list) (extract-numbers-from-list (cdr list)))
+			(extract-numbers-from-list (cdr list))
 		)
 	)
 )
@@ -39,7 +55,7 @@
 				0
 				(if (equal (car tone) "'")
 					(+ value (get-tone-value (cdr tone) value))
-					(+ (get-tone (car tone)) (get-tone-value (cdr tone) 12))
+					(+ (get-tone (car tone)) (get-tone-value (cdr tone) (abs value)))
 				)
 			)
 )
@@ -54,8 +70,15 @@
 	)
 )
 
-(defun test ()
-	(let ((a "a"))
-		(assert (equal (get-frequency a) 440) (a) "Wrong frequency" (get-frequency a))
-	)
+(defun get-volume (tone)
+	(assert (stringp tone) (tone))
+	(- (count #\+ tone) (count #\- tone))
+)
+
+(defun get-length (tone)
+	(nth-value 0 (parse-integer (remove-if-not #'digit-char-p tone) :junk-allowed t))
+)
+
+(defun get-toneseconds (bpm tone)
+	(calc-toneseconds bpm (get-length tone))
 )

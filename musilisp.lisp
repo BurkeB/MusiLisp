@@ -34,7 +34,55 @@
 ;;; <Block Align> Second Value
 ;;; <Block Align> .....
 
-(require "functions_tone.lisp")
+(require "tone" "functions_tone.lisp")
+
+(defpackage "musilisp"
+  (:use "COMMON-LISP"))
+
+(in-package musilisp)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; The function "split-by-one-space" comes from http://cl-cookbook.sourceforge.net/strings.html
+;;;; The function "flatten" comes from http://rosettacode.org/wiki/Flatten_a_list#Common_Lisp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun split-by-one-space (string)
+    "Returns a list of substrings of string
+divided by ONE space each.
+Note: Two consecutive spaces will be seen as
+if there were an empty string between them."
+    (loop for i = 0 then (1+ j)
+          as j = (position #\Space string :start i)
+          collect (subseq string i j)
+          while j))
+
+
+
+(defun flatten (structure)
+  (cond ((null structure) nil)
+        ((atom structure) (list structure))
+        (t (mapcan #'flatten structure))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun signedint-to-number (num)
+	(if (> num 32767)
+		(* (logxor num 65535) -1)
+		num
+	)
+)
+
+(defun number-to-signedint (num)
+	(if (< num 0)
+		;;;(+ 32768 (logxor (logand num 32767) 32767))
+		(- 65535 (lognot num))
+		(logand num 32767)
+	)
+)
 
 (defun numbertoxbyte (number bytecount)
 	(if (> bytecount 0)
@@ -44,6 +92,7 @@
 		nil
 	)
 )
+
 
 (defun ltoi (charlist)
   (mapcar #'char-int charlist)
@@ -102,22 +151,21 @@
 	)
 )
 
-(defun signedint-to-number (num)
-	(if (> num 32767)
-		(* (logxor num 65535) -1)
-		num
+
+(defun make-squarewave (frequency maxvolume samples_per_second)
+	#'(lambda (x)
+		(squarewave x frequency maxvolume samples_per_second)
 	)
 )
 
 
-(defun number-to-signedint (num)
-	(if (< num 0)
-		;;;(+ 32768 (logxor (logand num 32767) 32767))
-		(- 65535 (lognot num))
-		(logand num 32767)
+
+(defun mysin (x 2pf maxvolume samples_per_second)
+	(let* (	(x2 (/ (float (mod x samples_per_second)) (float samples_per_second)))
+			(y (nth-value 0 (round (* (sin (* x2 2pf) ) maxvolume)))))
+		y
 	)
 )
-
 
 (defun make-harmonic-instrument (frequency maxvolume samples_per_second)
 	(declare (integer maxvolume) (integer frequency))
@@ -135,20 +183,7 @@
 	)
 )
 
-(defun make-squarewave (frequency maxvolume samples_per_second)
-	#'(lambda (x)
-		(squarewave x frequency maxvolume samples_per_second)
-	)
-)
 
-
-
-(defun mysin (x 2pf maxvolume samples_per_second)
-	(let* (	(x2 (/ (float (mod x samples_per_second)) (float samples_per_second)))
-			(y (nth-value 0 (round (* (sin (* x2 2pf) ) maxvolume)))))
-		y
-	)
-)
 
 
 (defun make-mysin (frequency maxvolume samples_per_second)
@@ -164,13 +199,15 @@
 )
 
 
-(defun write-tone (frequency seconds)
+;;; Es wird für jeden Ton eine eigene Sample-Liste generiert.. Das ist so nicht richtig! Deswegen funktioniert merge-lists nicht..
+;;; Merge-List funktioniert inzwischen dank "flatten". Vielleicht sollte write-tone echte Zahlenergebnisse liefern, sodass merge danach problemlos rechnen kann. Und  dann erst convert zu signed-int!
+(defun write-tone (frequency seconds instrument)
 	(declare (integer frequency) (float seconds))
 	(let* ((samples_per_second 44100)
 		  (samples (* samples_per_second seconds))
 			;;;(mysquarewave (make-harmonic-instrument frequency 32767 samples_per_second)))
 			;;;(mysquarewave (make-squarewave frequency 32767 samples_per_second)))
-			(mysquarewave (make-mysin frequency 32767 samples_per_second)))
+			(mysquarewave (funcall instrument frequency 32767 samples_per_second)))
 		(loop for i
 		from 0 
 		to samples
@@ -178,9 +215,9 @@
 	)
 )
 
-(defun write-tone-list (liste)
+(defun write-tone-list (liste bpm instrument)
 	(unless (null liste)
-		(cons (write-tone (tone:get-frequency (car liste)) 0.5) (write-tone-list (cdr liste)))
+		(cons (write-tone (get-frequency (car liste)) (get-toneseconds bpm (car liste)) instrument) (write-tone-list (cdr liste) bpm instrument))
 	)
 )
 
@@ -226,5 +263,46 @@
 		) s)
 	)
 )
+
+;;;; Bessere Lösung suchen:....
+;;(defun merge-lists (l1 l2)
+;;	(if (or (null l1) (null l2))
+;;		nil
+;;		(cons (+ (car l1) (car l2))
+;;				(merge-lists (cdr l1) (cdr l2)))
+;;	)
+;;)
+
+(defun merge-lists (l1 l2)
+	(map-into l1 #'+ l1 l2)
+	(mapcar #'(lambda (x) (truncate x 2)) l1)
+)
+
+;;; (merge-lists (list 1 2 3) (list 5 2 3))
+
+(defun musilisp (filename melody &key (instrument #'make-mysin) (bpm 120))
+	(with-open-file (s filename  :direction :output :element-type 'unsigned-byte)
+		(write-byte-sequence 
+		(concatenate 'list
+		(get-wave-header 0)
+		(get-fmt-chunk)
+		(get-data-chunk 10584000)
+		(if (listp melody)
+		(let ((l1 (flatten (write-tone-list (split-by-one-space (car melody)) bpm instrument)))
+				(l2 (flatten (write-tone-list (split-by-one-space (cadr melody)) bpm instrument))))
+				(merge-lists l1 l2)
+		)
+		(write-tone-list (split-by-one-space melody) bpm instrument))
+		) s)
+	)
+)
+
+
+;;; Tests
+
+(flatten (write-tone-list (split-by-one-space "g64") 1800 #'make-squarewave))
+(musilisp "musilisp_poly2.wav" (list "g4 g'4 g'8 f'8 eb'8 d'4 c'8 c'2 c'4 hb4 ab2 g'4 g'8 f'8 f'1" "g4 f1 c1 f1 f1") :bpm 150 :instrument #'make-mysin)
+(musilisp "musilisp4.wav" "g4 g'4 g'8 f'8 eb'8 d'4 c'8 c'2 c'4 hb4 ab2 g'4 g'8 f'8 f'1" :bpm 150 :instrument #'make-squarewave)
+(musilisp "musilisp4.wav" "g4 c1 c1 f1 f1" :bpm 150 :instrument #'make-mysin)
 
 ;;; (write-melody "../../tmp/testwave8.wav" '("c'" "d'" "e'" "f'" "g'" "g'" "a'" "a'" "a'" "a'" "g'" "a'" "a'" "a'" "a'" "g'"))
