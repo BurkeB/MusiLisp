@@ -1,0 +1,29 @@
+;;; =========================
+;;; Wave File Structure
+;;; =========================
+
+;;; RIFF Header
+;;; 4B "RIFF"
+;;; 4B Datasize - 8
+;;; 4B "WAVE"
+
+;;; =========================
+
+;;; FMT Section
+;;; 4B "FMT"
+;;; 4B FMT-Header-Size (without first 8B => 16Bytes)
+;;; 2B Format-Tag 01 (PCM)
+;;; 2B Channels (1=Mono, 2=Stereo ...)
+;;; 4B Sample-Rate (44100, 48000...)
+;;; 4B Bytes/Second (Sample-Rate * Frame-Größe
+;;; 2B Block Align (Frame-Größe = <Anzahl der Kanäle> * ((<Bits/Sample (eines Kanals)>+7) / 8)   (Division ohne Rest))
+;;; 2B Bits/Sample
+
+;;; =========================
+
+;;; Data Section
+;;; 4B "DATA"
+;;; 4B Datablock-Length
+;;; <Block Align> First Value
+;;; <Block Align> Second Value
+;;; <Block Align> .....

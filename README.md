@@ -1,7 +1,7 @@
 MusiLisp
 ==========
 
-A program to create .wav music files from tone-lists.
+A program to create 16-Bit .wav music files from tone-lists.
 
 
 =======================
