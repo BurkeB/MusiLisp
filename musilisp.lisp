@@ -201,15 +201,6 @@ if there were an empty string between them."
     )
 )
 
-;;;; (musilisp "bourree_complete_sine_oct.wav" (bourree) :bpm 150 :instrument #'make-mysin-octave)
-
-
-
-
-
-;;; Tests
-;;; (write-tone-list (split-by-one-space "g64") 1800 #'make-squarewave)
-;;; (flatten (write-tone-list (split-by-one-space "g64") 1800 #'make-squarewave))
-;;; (musilisp "musilisp_poly2.wav" (list "g4 g'4 g'8 f'8 eb'8 d'4 c'8 c'2 c'4 hb4 ab2 g'4 g'8 f'8 f'1" "g4 c'1 c'1 f'1 f'1") :bpm 150 :instrument #'make-mysin)
-;;; (musilisp "musilisp4.wav" "g4 g'4 g'8 f'8 eb'8 d'4 c'8 c'2 c'4 hb4 ab2 g'4 g'8 f'8 f'1" :bpm 150 :instrument #'make-mysin)
-;;; (musilisp "musilisp4.wav" "g4 c1 c1 f1 f1" :bpm 150 :instrument #'make-mysin)
+;;;; (musilisp "bourree_complete_sine_oct.wav" (bourree) :bpm 155 :instrument #'make-mysin-octave)
+;;;; (musilisp "bourree_complete_harmonic_oct.wav" (bourree) :bpm 155 :instrument #'make-harmonic-octave)
+;;;; (musilisp "bourree_complete_squarewave_oct.wav" (bourree) :bpm 155 :instrument #'make-squarewave-octave)

@@ -55,10 +55,11 @@ To-Do
 
 These functions will be implemented in future versions:
 * Support of polyphonic Music (Lists of tone-lists)
-** Writing Chords instead of Melody
-** Generate a Walking-Bass-Line to a Chord-Sequence
+* * Writing Chords instead of Melody
+* * Generate a Walking-Bass-Line to a Chord-Sequence
 * Allow tempo changes inside a melody
 * Allow time signature changes (insige a melody)
 * Setting of reference-notes to transpose a melody 
 * Musilisp as a Webservice. Simple form to enter a Melody, which creates a download of a Wave-File or play the file directly with a musicplayer Plugin.
 * Play created music directly with Soundcard
+* ....

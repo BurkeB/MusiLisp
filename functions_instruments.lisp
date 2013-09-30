@@ -3,6 +3,8 @@
     (integer frequency)
     (integer maxvolume)
     (integer samples_per_second))
+	(if (equal frequency 0)
+	0
     (let* ((t2 (/ samples_per_second frequency))
           (t1 (/ t2 2))
           (t3 (mod x t2))
@@ -12,6 +14,7 @@
             (* -1 value)
         )
     )
+	)
 )
 
 
@@ -34,14 +37,11 @@
     (declare (integer maxvolume) (integer frequency))
     #'(lambda (x)
         (let (    (base (mysin x frequency maxvolume samples_per_second))
-                ;;(harm1    (mysin x (* 2 pi (* frequency 8)) (*(/ maxvolume 100) 45) samples_per_second))
-                ;;(harm2    (mysin x (* 2 pi (+ (* frequency 10)(/ frequency 2))) (*(/ maxvolume 100) 45) samples_per_second)))
-                (harm1    (signedint-to-number (squarewave x (* frequency 3) (*(/ maxvolume 100) 45) samples_per_second)))
-                (harm2    (signedint-to-number (mysin x (+ (* frequency 2)) (*(/ maxvolume 100) 20) samples_per_second))))
-                ;;;(harm3    (signedint-to-number (squarewave x (+ (* frequency 10)(/ frequency 2)) (*(/ maxvolume 100) 25) samples_per_second)))
-                ;;;(harm4    (signedint-to-number (squarewave x (+ (* frequency 14)(/ frequency 1)) (*(/ maxvolume 100) 20) samples_per_second)))
-                ;;;(harm5    (signedint-to-number (squarewave x (+ (* frequency 18)(/ frequency 2)) (*(/ maxvolume 100) 25) samples_per_second))))
-                (nth-value 0 (truncate (+ base harm1 harm2) 3))
+				
+                (harm1    (squarewave x (* frequency 4) (*(/ maxvolume 100) 20) samples_per_second))
+                (harm2    (mysin x (+ (* frequency 2)) (*(/ maxvolume 100) 30) samples_per_second))
+				)
+                (nth-value 0 (truncate (+ base harm1 harm2) 2))
         )
     )
 )
