@@ -61,6 +61,10 @@
     )
 )
 
+(defun make-squarewave-octave (frequency maxvolume samples_per_second)
+	(make-squarewave (* frequency 2) maxvolume samples_per_second)
+)
+
 (defun make-mysin-octave (frequency maxvolume samples_per_second)
 	(make-mysin (* frequency 2) maxvolume samples_per_second)
 )
