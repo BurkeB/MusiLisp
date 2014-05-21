@@ -28,7 +28,7 @@
 
 (defun mysin (x 2pf maxvolume samples_per_second)
     (let* (    (x2 (/ (float (mod x samples_per_second)) (float samples_per_second)))
-            (y (nth-value 0 (round (* (sin (* x2 2pf) ) maxvolume)))))
+            (y (* (sin (* x2 2pf) ) maxvolume)))
         y
     )
 )
@@ -51,15 +51,17 @@
 
 (defun make-mysin (frequency maxvolume samples_per_second)
 (declare (integer frequency))
-(let ((pf2 (* frequency 2 pi)))
+(let ((pf2 (float (* frequency 2 pi))))
     #'(lambda (x)
-    (declare (integer x))
+		(declare (integer x))
         (let ((y (mysin x pf2 maxvolume samples_per_second)))
             y
         )
     )
     )
 )
+
+(funcall (make-mysin 440 1 8000) 2)
 
 (defun make-squarewave-octave (frequency maxvolume samples_per_second)
 	(make-squarewave (* frequency 2) maxvolume samples_per_second)

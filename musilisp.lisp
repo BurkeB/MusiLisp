@@ -25,6 +25,10 @@ if there were an empty string between them."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun to-int (num)
+	(nth-value 0 (round num)) 
+)
+
 (defun signedint-to-number (num)
     (if (> num 32767)
         (* (logxor num 65535) -1)
@@ -142,11 +146,11 @@ if there were an empty string between them."
     (declare (integer frequency) (float seconds))
     (let* ((samples_per_second 44100)
           (samples (* samples_per_second seconds))
-            (mysquarewave (funcall instrument frequency 32767 samples_per_second)))
+            (my-instrument (funcall instrument frequency 1.0 samples_per_second)))
         (loop for i
         from 0
         to samples
-        collect (funcall mysquarewave i))
+        collect (print (to-int (* (funcall my-instrument i) 32767))))
     )
 )
 
@@ -154,7 +158,7 @@ if there were an empty string between them."
 
 (defun write-tone-list (liste bpm instrument)
     (unless (null liste)
-        (cons (write-tone (get-frequency (car liste)) (get-toneseconds bpm (car liste)) instrument) (write-tone-list (cdr liste) bpm instrument))
+        (cons (write-tone (to-int (get-frequency (car liste))) (get-toneseconds bpm (car liste)) instrument) (write-tone-list (cdr liste) bpm instrument))
     )
 )
 
@@ -183,7 +187,6 @@ if there were an empty string between them."
 	)
 )
 
-
 (defun musilisp (filename melody &key (instrument #'make-mysin) (bpm 120))
     (with-open-file (s filename  :direction :output :element-type 'unsigned-byte :if-exists :RENAME)
 		(let* (
@@ -201,6 +204,7 @@ if there were an empty string between them."
     )
 )
 
-;;;; (musilisp "bourree_complete_sine_oct.wav" (bourree) :bpm 155 :instrument #'make-mysin-octave)
+(musilisp "bourree_complete_sine_oct.wav" (bourree) :bpm 155 :instrument #'make-mysin-octave)
+(musilisp "auftakt.wav" "'g8" :bpm 155 :instrument #'make-mysin)
 ;;;; (musilisp "bourree_complete_harmonic_oct.wav" (bourree) :bpm 155 :instrument #'make-harmonic-octave)
 ;;;; (musilisp "bourree_complete_squarewave_oct.wav" (bourree) :bpm 155 :instrument #'make-squarewave-octave)

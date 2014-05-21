@@ -1,5 +1,6 @@
 ;; s1 = Tief
 ;; s2 = Hoch
+
 (defun auftakt_s1 ()
 	"'g8 'f#8"
 )
