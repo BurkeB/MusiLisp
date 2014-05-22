@@ -1,3 +1,6 @@
+(load "functions_tone.lisp")
+(load "functions_instruments.lisp")
+(load "bourree.lisp")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; The function "split-by-one-space" comes from http://cl-cookbook.sourceforge.net/strings.html
 ;;;; The function "flatten" comes from http://rosettacode.org/wiki/Flatten_a_list#Common_Lisp
@@ -14,6 +17,15 @@ if there were an empty string between them."
           while j))
 
 
+(defun smooth (lst)
+	(loop for i from 1 below (- (length lst) 1)
+		do (let ((h (- i 1)) (j (+ i 1)))
+				(setf (nth i lst) 
+					(to-int (/ (+ (nth h lst) (nth j lst)) 2)))
+			)
+			)
+	lst
+)
 
 (defun flatten (structure)
   (cond ((null structure) nil)
@@ -104,6 +116,7 @@ if there were an empty string between them."
 )
 
 
+
 (defun write-byte-sequence (seq stream)
 	"Write a list of bytes into a writable bytestream.
 	Parameters
@@ -150,7 +163,7 @@ if there were an empty string between them."
         (loop for i
         from 0
         to samples
-        collect (print (to-int (* (funcall my-instrument i) 32767))))
+        collect (to-int (* (funcall my-instrument i) 32767)))
     )
 )
 
@@ -177,11 +190,11 @@ if there were an empty string between them."
 			(let* ((l1 (flatten (write-tone-list (split-by-one-space (car melody)) bpm instrument)))
 				(l2 (flatten (write-tone-list (split-by-one-space (cadr melody)) bpm instrument))))
 					(let ((ll1 (merge-lists l1 l2)))
-				(convert-list ll1)
+				(convert-list (smooth ll1))
 					ll1)
 			)
 			(let ((l1 (flatten (write-tone-list (split-by-one-space melody) bpm instrument))))
-			(convert-list l1)
+			(convert-list (smooth l1))
 			l1
 			)
 	)
@@ -204,7 +217,7 @@ if there were an empty string between them."
     )
 )
 
-(musilisp "bourree_complete_sine_oct.wav" (bourree) :bpm 155 :instrument #'make-mysin-octave)
-(musilisp "auftakt.wav" "'g8" :bpm 155 :instrument #'make-mysin)
+;;(musilisp "bourree_complete_sine_oct.wav" (bourree) :bpm 155 :instrument #'make-mysin-octave)
+;;;; (musilisp "auftakt2.wav" (part1_s1) :bpm 155 :instrument #'make-mysin-octave)
 ;;;; (musilisp "bourree_complete_harmonic_oct.wav" (bourree) :bpm 155 :instrument #'make-harmonic-octave)
 ;;;; (musilisp "bourree_complete_squarewave_oct.wav" (bourree) :bpm 155 :instrument #'make-squarewave-octave)

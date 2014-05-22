@@ -61,7 +61,7 @@
     )
 )
 
-(funcall (make-mysin 440 1 8000) 2)
+;;; (funcall (make-mysin 440 1 8000) 2)
 
 (defun make-squarewave-octave (frequency maxvolume samples_per_second)
 	(make-squarewave (* frequency 2) maxvolume samples_per_second)
