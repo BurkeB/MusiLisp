@@ -17,17 +17,6 @@ if there were an empty string between them."
           collect (subseq string i j)
           while j))
 
-
-(defun smooth (lst)
-	(loop for i from 1 below (- (length lst) 1)
-		do (let ((h (- i 1)) (j (+ i 1)))
-				(setf (nth i lst) 
-					(to-int (/ (+ (nth h lst) (nth j lst)) 2)))
-			)
-			)
-	lst
-)
-
 (defun flatten (structure)
   (cond ((null structure) nil)
         ((atom structure) (list structure))
@@ -79,10 +68,8 @@ if there were an empty string between them."
 	Parameters
 	1: list1
 	2: list2" 
-    (map-into l1 #'+ l1 l2)
-    (mapcar #'(lambda (x) (truncate x 2)) l1)
+    (map-into l1 #'(lambda (x y) (truncate (+ x y) 2)) l1 l2)
 )
-
 
 (defun ltoi (charlist)
 	"Convert each char in the charlist to its bytevalue.
@@ -123,11 +110,11 @@ if there were an empty string between them."
 	Parameters
 	1: a list of bytes, or a list of lists of bytes...
 	2: a stream which is accesable via write-byte"
- (unless (null seq)
-    (if (listp (car seq))
-    (write-byte-sequence (car seq) stream)
-    (write-byte (car seq) stream))
-    (write-byte-sequence (cdr seq) stream)
+	(unless (null seq)
+	    (if (listp (car seq))
+			(write-byte-sequence (car seq) stream)
+			(write-byte (car seq) stream))
+	    (write-byte-sequence (cdr seq) stream)
     )
 )
 
@@ -162,10 +149,10 @@ if there were an empty string between them."
 			(factor (/ 1 samples_per_second))
             (samples (* samples_per_second seconds))
             (my-instrument (funcall instrument frequency)))
-        (loop for i
-        from 0
-        to samples
-        collect (to-int (* (funcall my-instrument (* i factor)) 32767)))
+        (loop 
+			for i from 0
+			to samples
+			collect (to-int (* (funcall my-instrument (* i factor)) 32767)))
     )
 )
 
@@ -191,13 +178,11 @@ if there were an empty string between them."
 	(if (listp melody)
 			(let* ((l1 (flatten (write-tone-list (split-by-one-space (car melody)) bpm instrument)))
 				(l2 (flatten (write-tone-list (split-by-one-space (cadr melody)) bpm instrument))))
-					(let ((ll1 (merge-lists l1 l2)))
-				;(convert-list (smooth ll1))
-				(convert-list ll1)
-					ll1)
+					(merge-lists l1 l2)
+					(convert-list l1)
+					l1
 			)
 			(let ((l1 (flatten (write-tone-list (split-by-one-space melody) bpm instrument))))
-			;(convert-list (smooth l1))
 			(convert-list l1)
 			l1
 			)
@@ -221,7 +206,7 @@ if there were an empty string between them."
 )
 
 ;;(musilisp "bourree_complete_sine_oct.wav" (bourree) :bpm 155 :instrument #'make-mysin-octave)
-;;;; (musilisp "auftakt2.wav" (part1_s1) :bpm 155 :instrument #'mysin-octave)
-;;;  (musilisp "bourree.wav" (bourree) :bpm 155 :instrument #'mysin-octave)
+;;;; (musilisp "auftakt2.wav" 	(auftakt_s1) :bpm 155 :instrument #'mysin-octave)
+;;;  (musilisp "bourree3.wav" (bourree) :bpm 155 :instrument #'mysin-octave)
 ;;;; (musilisp "bourree_complete_harmonic_oct.wav" (bourree) :bpm 155 :instrument #'make-harmonic-octave)
 ;;;; (musilisp "bourree_complete_squarewave_oct.wav" (bourree) :bpm 155 :instrument #'make-squarewave-octave)
