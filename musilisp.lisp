@@ -1,6 +1,7 @@
 (load "functions_tone.lisp")
 (load "functions_instruments.lisp")
 (load "bourree.lisp")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; The function "split-by-one-space" comes from http://cl-cookbook.sourceforge.net/strings.html
 ;;;; The function "flatten" comes from http://rosettacode.org/wiki/Flatten_a_list#Common_Lisp
@@ -158,16 +159,17 @@ if there were an empty string between them."
 (defun write-tone (frequency seconds instrument)
     (declare (integer frequency) (float seconds))
     (let* ((samples_per_second 44100)
-          (samples (* samples_per_second seconds))
-            (my-instrument (funcall instrument frequency 1.0 samples_per_second)))
+			(factor (/ 1 samples_per_second))
+            (samples (* samples_per_second seconds))
+            (my-instrument (funcall instrument frequency)))
         (loop for i
         from 0
         to samples
-        collect (to-int (* (funcall my-instrument i) 32767)))
+        collect (to-int (* (funcall my-instrument (* i factor)) 32767)))
     )
 )
 
-;;; (write-tone 120 1 #'make-mysin)
+;;; (write-tone 120 1.0 #'mysin)
 
 (defun write-tone-list (liste bpm instrument)
     (unless (null liste)
@@ -190,17 +192,19 @@ if there were an empty string between them."
 			(let* ((l1 (flatten (write-tone-list (split-by-one-space (car melody)) bpm instrument)))
 				(l2 (flatten (write-tone-list (split-by-one-space (cadr melody)) bpm instrument))))
 					(let ((ll1 (merge-lists l1 l2)))
-				(convert-list (smooth ll1))
+				;(convert-list (smooth ll1))
+				(convert-list ll1)
 					ll1)
 			)
 			(let ((l1 (flatten (write-tone-list (split-by-one-space melody) bpm instrument))))
-			(convert-list (smooth l1))
+			;(convert-list (smooth l1))
+			(convert-list l1)
 			l1
 			)
 	)
 )
 
-(defun musilisp (filename melody &key (instrument #'make-mysin) (bpm 120))
+(defun musilisp (filename melody &key (instrument #'mysin) (bpm 120))
     (with-open-file (s filename  :direction :output :element-type 'unsigned-byte :if-exists :RENAME)
 		(let* (
 			  (all nil)
@@ -213,11 +217,11 @@ if there were an empty string between them."
 			(setf all (concatenate 'list wave-header all))
 			(write-byte-sequence all s)	
 		)
-        
     )
 )
 
 ;;(musilisp "bourree_complete_sine_oct.wav" (bourree) :bpm 155 :instrument #'make-mysin-octave)
-;;;; (musilisp "auftakt2.wav" (part1_s1) :bpm 155 :instrument #'make-mysin-octave)
+;;;; (musilisp "auftakt2.wav" (part1_s1) :bpm 155 :instrument #'mysin-octave)
+;;;  (musilisp "bourree.wav" (bourree) :bpm 155 :instrument #'mysin-octave)
 ;;;; (musilisp "bourree_complete_harmonic_oct.wav" (bourree) :bpm 155 :instrument #'make-harmonic-octave)
 ;;;; (musilisp "bourree_complete_squarewave_oct.wav" (bourree) :bpm 155 :instrument #'make-squarewave-octave)

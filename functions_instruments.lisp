@@ -1,76 +1,11 @@
-(defun squarewave (x frequency maxvolume samples_per_second)
-    (declare
-    (integer frequency)
-    (integer maxvolume)
-    (integer samples_per_second))
-	(if (equal frequency 0)
-	0
-    (let* ((t2 (/ samples_per_second frequency))
-          (t1 (/ t2 2))
-          (t3 (mod x t2))
-            (value maxvolume))
-        (if (< t3 t1)
-            value
-            (* -1 value)
-        )
-    )
+(defun mysin (frequency)
+	(let ((factor (* 2 frequency pi)))
+		#'(lambda (x)
+			(sin (* factor x))
+	    )
 	)
 )
 
-
-(defun make-squarewave (frequency maxvolume samples_per_second)
-    #'(lambda (x)
-        (squarewave x frequency maxvolume samples_per_second)
-    )
-)
-
-
-
-(defun mysin (x 2pf maxvolume samples_per_second)
-    (let* (    (x2 (/ (float (mod x samples_per_second)) (float samples_per_second)))
-            (y (* (sin (* x2 2pf) ) maxvolume)))
-        y
-    )
-)
-
-(defun make-harmonic-instrument (frequency maxvolume samples_per_second)
-    (declare (integer maxvolume) (integer frequency))
-    #'(lambda (x)
-        (let (    (base (mysin x frequency maxvolume samples_per_second))
-				
-                (harm1    (squarewave x (* frequency 4) (*(/ maxvolume 100) 20) samples_per_second))
-                (harm2    (mysin x (+ (* frequency 2)) (*(/ maxvolume 100) 30) samples_per_second))
-				)
-                (nth-value 0 (truncate (+ base harm1 harm2) 2))
-        )
-    )
-)
-
-
-
-
-(defun make-mysin (frequency maxvolume samples_per_second)
-(declare (integer frequency))
-(let ((pf2 (float (* frequency 2 pi))))
-    #'(lambda (x)
-		(declare (integer x))
-        (let ((y (mysin x pf2 maxvolume samples_per_second)))
-            y
-        )
-    )
-    )
-)
-
-;;; (funcall (make-mysin 440 1 8000) 2)
-
-(defun make-squarewave-octave (frequency maxvolume samples_per_second)
-	(make-squarewave (* frequency 2) maxvolume samples_per_second)
-)
-
-(defun make-mysin-octave (frequency maxvolume samples_per_second)
-	(make-mysin (* frequency 2) maxvolume samples_per_second)
-)
-
-(defun make-harmonic-octave (frequency maxvolume samples_per_second)
-	(make-harmonic-instrument (* frequency 2) maxvolume samples_per_second)
+(defun mysin-octave (frequency)
+	(mysin (* 2 frequency))
 )
