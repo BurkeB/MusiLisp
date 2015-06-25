@@ -20,7 +20,6 @@ if there were an empty string between them."
         ((atom structure) (list structure))
         (t (mapcan #'flatten structure))))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -49,15 +48,11 @@ if there were an empty string between them."
 	Parameter
 	1: number to convert
 	2: number of bytes to represent the number"
-    (if (> bytecount 0)
-        (let ((masked (logand number 255)))
-            (cons masked (numbertoxbyte (ash number -8) (1- bytecount)))
-        )
-        nil
-    )
-)
+	(loop for x below bytecount
+	   collect (logand number 255)
+	   do (setf number (ash number -8))))
 
-;;; (numbertoxbyte 439041101 4)
+;;; (numbertoxbyte 439024982340892734897234411010007777 160)
 ;;; (77 60 43 26)
 
 
@@ -98,22 +93,18 @@ if there were an empty string between them."
 	(mapcar (lambda (n) (numbertoxbyte n 2)) l1))
 
 
-
 (defun write-byte-sequence (seq stream)
-	"Write a list of bytes into a writable bytestream.
+  "Write a list of bytes into a writable bytestream.
 	Parameters
 	1: a list of bytes, or a list of lists of bytes...
 	2: a stream which is accesable via write-byte"
-	(unless (null seq)
-	    (if (listp (car seq))
-			(write-byte-sequence (car seq) stream)
-			(write-byte (car seq) stream))
-	    (write-byte-sequence (cdr seq) stream)
-    )
-)
+  (loop for s in seq
+     do (if (listp (car seq))
+	     (write-byte-sequence s stream)
+	     (write-byte s stream))))
 
 (defun get-wave-header (filesize)
-	"This returns a list of bytes which represent the Wave-file-header.
+  "This returns a list of bytes which represent the Wave-file-header.
 	Parameter
 	1: filesize"
   (concatenate 'list
@@ -138,17 +129,17 @@ if there were an empty string between them."
 
 
 (defun write-tone (frequency seconds instrument)
-    (declare (integer frequency) (float seconds))
-    (let* ((samples_per_second 44100)
-			(factor (/ 1 samples_per_second))
-            (samples (* samples_per_second seconds))
-            (my-instrument (funcall instrument frequency)))
-        (loop 
-			for i from 0
-			to samples
-			collect (to-int (* (funcall my-instrument (* i factor)) 32767)))
+  (declare (integer frequency) (float seconds))
+  (let* ((samples_per_second 44100)
+	 (factor (/ 1 samples_per_second))
+	 (samples (* samples_per_second seconds))
+	 (my-instrument (funcall instrument frequency)))
+    (loop 
+       for i from 0
+       to samples
+       collect (to-int (* (funcall my-instrument (* i factor)) 32767)))
     )
-)
+  )
 
 ;;; (write-tone 120 1.0 #'mysin)
 
@@ -173,15 +164,9 @@ if there were an empty string between them."
 			(let* ((l1 (flatten (write-tone-list (split-by-one-space (car melody)) bpm instrument)))
 				(l2 (flatten (write-tone-list (split-by-one-space (cadr melody)) bpm instrument))))
 					(merge-lists l1 l2)
-					(convert-list l1)
-					l1
-			)
+					(convert-list l1))
 			(let ((l1 (flatten (write-tone-list (split-by-one-space melody) bpm instrument))))
-			(convert-list l1)
-			l1
-			)
-	)
-)
+			(convert-list l1))))
 
 (defun musilisp (filename melody &key (instrument #'mysin) (bpm 120))
     (with-open-file (s filename  :direction :output :element-type 'unsigned-byte :if-exists :RENAME)
