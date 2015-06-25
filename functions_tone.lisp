@@ -1,3 +1,5 @@
+(in-package #:musilisp)
+
 ;;; Functions for converting a tone into a frequency or calculate the length of a tone.
 
 (defun string-to-list (string)

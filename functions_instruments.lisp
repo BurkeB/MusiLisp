@@ -1,3 +1,5 @@
+(in-package #:musilisp)
+
 (defun mysin (frequency)
 	(let ((factor (* 2 frequency pi)))
 		#'(lambda (x)

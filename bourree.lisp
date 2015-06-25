@@ -1,3 +1,5 @@
+(in-package #:musilisp)
+
 ;; s1 = Tief
 ;; s2 = Hoch
 

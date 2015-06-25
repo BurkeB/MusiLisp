@@ -1,6 +1,4 @@
-(load "functions_tone.lisp")
-(load "functions_instruments.lisp")
-(load "bourree.lisp")
+(in-package #:musilisp)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; The function "split-by-one-space" comes from http://cl-cookbook.sourceforge.net/strings.html
@@ -97,11 +95,7 @@ if there were an empty string between them."
 	"Converts the sample-values of a list to a wave-file-format.
 	Parameters
 	1: list filled with sample-values"
-    (unless (null l1)
-        (setf (car l1) (numbertoxbyte (number-to-signedint (car l1)) 2))
-        (convert-list (cdr l1))
-    )
-)
+	(mapcar (lambda (n) (numbertoxbyte n 2)) l1))
 
 
 
@@ -207,6 +201,6 @@ if there were an empty string between them."
 
 ;;(musilisp "bourree_complete_sine_oct.wav" (bourree) :bpm 155 :instrument #'make-mysin-octave)
 ;;;; (musilisp "auftakt2.wav" 	(auftakt_s1) :bpm 155 :instrument #'mysin-octave)
-;;;  (musilisp "bourree3.wav" (bourree) :bpm 155 :instrument #'mysin-octave)
+;;;  (musilisp "bourree3.wav" (bourree) :bpm 135 :instrument #'mysin-octave)
 ;;;; (musilisp "bourree_complete_harmonic_oct.wav" (bourree) :bpm 155 :instrument #'make-harmonic-octave)
 ;;;; (musilisp "bourree_complete_squarewave_oct.wav" (bourree) :bpm 155 :instrument #'make-squarewave-octave)
